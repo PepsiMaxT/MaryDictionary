@@ -14,7 +14,24 @@
     <title>Hello from Electron renderer!</title>
   </head>
   <body>
-    
+    <div id="main-container"> <!-- This div contains the actual dictionary itself -->
+        <div id="search-bar-container"> <!-- This div contains the search bar-->
+            <select name="gender" id="gender-select">
+                <option value="any">Any</option>
+                <option value="M">Masculine</option>
+                <option value="F">Feminine</option>
+                <option value="N">Neuter</option>
+                <option value="N/A">No gender</option>
+            </select>
+            <div class="dropdown">
+                <button class="dropdown-box-button">select tags</button>
+                <div class="dropdown-content">
+                    <label><input type="checkbox" name="tag" value="verb" class="dropdown-checkbox">verb</label>
+                    <label><input type="checkbox" name="tag" value="noun" class="dropdown-checkbox">noun</label>
+                </div>
+            </div>
+        </div>
+    </div>
   </body>
   <script src="./renderer.js"></script>
 </html>

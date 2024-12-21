@@ -1,5 +1,1 @@
-const { contextBridge } = require('electron')
-
-contextBridge.exposeInMainWorld('versions', {
-
-})
+const { contextBridge } = require('electron');
