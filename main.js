@@ -1,5 +1,8 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+
+let dictionary = [];
+let tags = [];
 
 const createWindow = () => {
   const win = new BrowserWindow({
@@ -14,6 +17,11 @@ const createWindow = () => {
 };
 
 app.whenReady().then(() => {
+  readInDictionary();
+  readInTags();
+  ipcMain.handle('getDictionary', () => dictionary);
+  ipcMain.handle('getTags', () => tags);
+
   createWindow();
 
   app.on('activate', () => {
@@ -28,3 +36,11 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
+
+function readInDictionary() {
+
+}
+
+function readInTags() {
+  
+}

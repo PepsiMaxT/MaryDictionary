@@ -35,13 +35,22 @@ function functionaliseDropdowns() {
     });
 }
 
-function getCheckedBoxValuesFrom(dropdown) {
-    const boxes = dropdown.getElementsByClassName('dropdown-checkbox');
+function addOptionToDropdown(dropdown, value, label) {
+    const dropdownList = dropdown.querySelector('.dropdown-content'); // Get the actual list
 
-    var checkedList = [];
-    Array.from(boxes).forEach((checkbox) => {
-        if (checkbox.checked) checkedList.push(checkbox.value);
-    });
+    const newLabel = document.createElement('label'); // New container label to name
+    
+    const newItem = document.createElement('input'); // Adding all innerHTML of the new checkbox
+    newItem.type = "checkbox";
+    newItem.name = "tag";
+    newItem.value = value;
+    newItem.classList.add('dropdown-checkbox');
+
+    newLabel.appendChild(newItem);
+    newLabel.appendChild(document.createTextNode(label));
+
+    const addButton = dropdown.querySelector('#add-new-tag');
+    dropdownList.insertBefore(newLabel, addButton); // Keep the add new button at the end
 }
 
 function getDropdownBoxButtonFrom(box) {
@@ -50,4 +59,13 @@ function getDropdownBoxButtonFrom(box) {
 
 function getDropDownListFrom(box) {
     return box.querySelector('.dropdown-content');
+}
+
+function getCheckedBoxValuesFrom(dropdown) {
+    const boxes = dropdown.getElementsByClassName('dropdown-checkbox');
+
+    var checkedList = [];
+    Array.from(boxes).forEach((checkbox) => {
+        if (checkbox.checked) checkedList.push(checkbox.value);
+    });
 }
