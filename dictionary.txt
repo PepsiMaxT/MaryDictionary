@@ -1,1 +1,2 @@
 word1,word2|word1,word2|F|
+other1,other2,other3|other1|N/A|noun,verb
