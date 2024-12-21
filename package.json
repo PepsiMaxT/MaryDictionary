@@ -1,0 +1,15 @@
+{
+  "name": "marydictionary",
+  "version": "1.0.0",
+  "description": "Dictionary for Mary",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"hello\""
+  },
+  "author": "Max Taunton",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^33.2.1"
+  }
+}
