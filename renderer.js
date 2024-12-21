@@ -2,10 +2,12 @@ let dictionary = [];
 let tags = [];
 
 document.addEventListener('DOMContentLoaded', async (event) => {
-    functionalisePrewrittenDropdowns();
-
     tags = await definitions.getTags();
     dictionary = createDictionaryFrom(await definitions.getDictionary());
+
+    const selectTagsDropdown = createUncheckedDropList(tags);
+    getDropdownBoxButtonFrom(selectTagsDropdown).innerText = 'Select tags';
+    document.getElementById('placeholder-dropdown').replaceWith(selectTagsDropdown);
 
     const dictionaryContainer = document.getElementById('definition-table');
     dictionary.forEach((definition) => {
@@ -38,7 +40,7 @@ function functionaliseDropdown(dropdown) {
 
         // Declare the dropdown close detection
         const closeDropdown = (event) => {
-            if (!box.contains(event.target)) {
+            if (!dropdown.contains(event.target)) {
                 list.classList.remove('dropdown-content-show');
             }
 
