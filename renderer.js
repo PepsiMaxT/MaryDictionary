@@ -1,11 +1,17 @@
-document.addEventListener('DOMContentLoaded', (event) => {
+let dictionary = [];
+let tags = [];
+
+document.addEventListener('DOMContentLoaded', async (event) => {
     functionaliseDropdowns();
+    dictionary = await definitions.getDictionary();
+    tags = await definitions.getTags();
+    console.log(dictionary);
+    console.log(tags);
 });
 
 // Get information about dropdown boxes to make them function
 function functionaliseDropdowns() {
     var dropdownBoxes = document.getElementsByClassName('dropdown');
-    console.log(dropdownBoxes);
 
     Array.from(dropdownBoxes).forEach((box) => {
         const btn = getDropdownBoxButtonFrom(box);
