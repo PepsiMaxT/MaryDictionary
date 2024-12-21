@@ -47,7 +47,7 @@ async function readInDictionary() {
 
     originWords = elements[0].split(',');
     foreignWords = elements[1].split(',');
-    definitionTags = (elements[3].length > 0) ? elements[3] : [];
+    definitionTags = (elements[3].length > 0) ? elements[3].split(',') : [];
 
     dictionary.push({origin: originWords, foreign: foreignWords, gender: elements[2], tags: definitionTags});
   });

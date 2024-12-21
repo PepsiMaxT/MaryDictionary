@@ -3,10 +3,14 @@ let tags = [];
 
 document.addEventListener('DOMContentLoaded', async (event) => {
     functionalisePrewrittenDropdowns();
+
     tags = await definitions.getTags();
     dictionary = createDictionaryFrom(await definitions.getDictionary());
-    console.log(dictionary);
-    console.log(tags);
+
+    const dictionaryContainer = document.getElementById('definition-table');
+    dictionary.forEach((definition) => {
+        dictionaryContainer.appendChild(definition.definitionElement);
+    });
 });
 
 // Get information about dropdown boxes to make them function
@@ -14,30 +18,34 @@ function functionalisePrewrittenDropdowns() {
     var dropdownBoxes = document.getElementsByClassName('dropdown');
 
     Array.from(dropdownBoxes).forEach((box) => {
-        const btn = getDropdownBoxButtonFrom(box);
-        const list = getDropDownListFrom(box);
+        functionaliseDropdown(box);
+    });
+}
 
-        btn.addEventListener('click', (event) => {
-            event.stopPropagation(); // Stop the click event being registered as the "unfocus" by document
+function functionaliseDropdown(dropdown) {
+    const btn = getDropdownBoxButtonFrom(dropdown);
+    const list = getDropDownListFrom(dropdown);
 
-            // Add or remove dropdown content show
-            if (list.classList.contains('dropdown-content-show')) {
+    btn.addEventListener('click', (event) => {
+        event.stopPropagation(); // Stop the click event being registered as the "unfocus" by document
+
+        // Add or remove dropdown content show
+        if (list.classList.contains('dropdown-content-show')) {
+            list.classList.remove('dropdown-content-show');
+        } else {
+            list.classList.add('dropdown-content-show');
+        }
+
+        // Declare the dropdown close detection
+        const closeDropdown = (event) => {
+            if (!box.contains(event.target)) {
                 list.classList.remove('dropdown-content-show');
-            } else {
-                list.classList.add('dropdown-content-show');
             }
 
-            // Declare the dropdown close detection
-            const closeDropdown = (event) => {
-                if (!box.contains(event.target)) {
-                    list.classList.remove('dropdown-content-show');
-                }
-
-                // Remove the event from the document
-                document.removeEventListener('click', closeDropdown);
-            }
-            document.addEventListener('click', closeDropdown);
-        });
+            // Remove the event from the document
+            document.removeEventListener('click', closeDropdown);
+        }
+        document.addEventListener('click', closeDropdown);
     });
 }
 
@@ -117,7 +125,9 @@ function createDefinitionElementFrom(definition) {
 
     metaDataDiv = document.createElement('div');
     metaDataDiv.classList.add('metadata-container');
-    metaDataDiv.appendChild(createGenderButton());
+    genderSelector = createGenderButton();
+    genderSelector.value = gender;
+    metaDataDiv.appendChild(genderSelector);
 
     tagDropList = createCheckedDropList(tags, definitionTags);
     metaDataDiv.appendChild(tagDropList); 
@@ -176,43 +186,24 @@ function createCheckedDropList(elements, checkedElements) {
 
     openListbtn = document.createElement('button');
     openListbtn.classList.add('dropdown-box-button');
+    openListbtn.innerText = 'Tags';
     dropdown.appendChild(openListbtn);
-
-    openListbtn.addEventListener('click', (event) => {
-        event.stopPropagation(); // Stop the click event being registered as the "unfocus" by document
-
-        // Add or remove dropdown content show
-        if (dropList.classList.contains('dropdown-content-show')) {
-            dropList.classList.remove('dropdown-content-show');
-        } else {
-            dropList.classList.add('dropdown-content-show');
-        }
-
-        // Declare the dropdown close detection
-        const closeDropdown = (event) => {
-            if (!dropdown.contains(event.target)) {
-                dropList.classList.remove('dropdown-content-show');
-            }
-
-            // Remove the event from the document
-            document.removeEventListener('click', closeDropdown);
-        }
-        document.addEventListener('click', closeDropdown);
-    });
 
     dropList = document.createElement('div');
     dropList.classList.add('dropdown-content');
     dropdown.appendChild(dropList);
 
     addNewbtn = document.createElement('button');
-    addNewbtn.class = 'add-new-tag';
+    addNewbtn.classList.add('add-new-tag');
     addNewbtn.innerText = 'Add new';
+    dropList.appendChild(addNewbtn);
 
     elements.forEach((element) => {
-        addOptionToDropdown(dropdown, element.value, element.label, checkedElements.includes(element.value));
+        addOptionToDropdown(dropdown, element, element, checkedElements.includes(element));
     });
 
-    return dropList;
+    functionaliseDropdown(dropdown);
+    return dropdown;
 }
 
 function createGenderButton() {
@@ -222,11 +213,8 @@ function createGenderButton() {
     genderOptions = ['Masculine', 'Feminine', 'Neuter', 'N/A'];
     genderOptions.forEach((option) => {
         genderOption = document.createElement('option');
-        genderOption.value = () => 
-        {
-            if (option === 'N/A') return option;
-            else return option[0].toUpperCase();
-        };
+        if (option === 'N/A') genderOption.value = option;
+        else genderOption.value = option[0];
         genderOption.innerText = option;
         genderSelector.appendChild(genderOption);
     });
