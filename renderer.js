@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async (event) => {
     dictionary = createDictionaryFrom(await definitions.getDictionary());
 
     const selectTagsDropdown = createUncheckedDropList(tags);
+    selectTagsDropdown.id = 'tag-search';
     getDropdownBoxButtonFrom(selectTagsDropdown).innerText = 'Select tags';
     document.getElementById('placeholder-dropdown').replaceWith(selectTagsDropdown);
 
@@ -13,7 +14,29 @@ document.addEventListener('DOMContentLoaded', async (event) => {
     dictionary.forEach((definition) => {
         dictionaryContainer.appendChild(definition.definitionElement);
     });
+
+    addUpdateFunctionsToSearches();
 });
+
+function addUpdateFunctionsToSearches() {
+    const originSearch = document.getElementById('origin-search');
+    originSearch.addEventListener('input', reloadDictionary); // on input change
+    
+    const foreignSearch = document.getElementById('foreign-search');
+    foreignSearch.addEventListener('input', reloadDictionary); // on input change
+    
+    const genderSearch = document.getElementById('gender-select');
+    genderSearch.addEventListener('change', reloadDictionary); // on gender change
+    
+    const tagSearch = document.getElementById('tag-search');
+    const tagSearchBoxes = tagSearch.getElementsByClassName('dropdown-checkbox');
+    Array.from(tagSearchBoxes).forEach((checkbox) => {
+        checkbox.addEventListener('change', reloadDictionary); // on a changed selection
+    });
+
+    const strictSearchCheck = document.querySelector('.strict-search-check');
+    strictSearchCheck.addEventListener('change', reloadDictionary);
+}
 
 // Get information about dropdown boxes to make them function
 function functionalisePrewrittenDropdowns() {
@@ -34,6 +57,7 @@ function functionaliseDropdown(dropdown) {
         // Add or remove dropdown content show
         if (list.classList.contains('dropdown-content-show')) {
             list.classList.remove('dropdown-content-show');
+            document.removeEventListener('click', closeDropdown)
         } else {
             list.classList.add('dropdown-content-show');
         }
@@ -42,10 +66,10 @@ function functionaliseDropdown(dropdown) {
         const closeDropdown = (event) => {
             if (!dropdown.contains(event.target)) {
                 list.classList.remove('dropdown-content-show');
-            }
 
-            // Remove the event from the document
-            document.removeEventListener('click', closeDropdown);
+                // Remove the event from the document
+                document.removeEventListener('click', closeDropdown);
+            }
         }
         document.addEventListener('click', closeDropdown);
     });
@@ -85,6 +109,8 @@ function getCheckedBoxValuesFrom(dropdown) {
     Array.from(boxes).forEach((checkbox) => {
         if (checkbox.checked) checkedList.push(checkbox.value);
     });
+
+    return checkedList;
 }
 
 // Manage the dictionary elements
@@ -222,4 +248,50 @@ function createGenderButton() {
     });
 
     return genderSelector;
+}
+
+// Searching through 
+
+function reloadDictionary() {
+    originSearchTerm = getOriginSearch();
+    foreignSearchTerm = getForeignSearch();
+    genderSearchTerm = getGenderSearch();
+    tagSearchTerms = getTagSearches();
+
+    dictionary.forEach((entry) => {
+        if ((originSearchTerm === '' || arrayContainsWordContainingSubstring(entry.origin, originSearchTerm)) && 
+            (foreignSearchTerm === '' || arrayContainsWordContainingSubstring(entry.foreign, foreignSearchTerm)) && 
+            (genderSearchTerm === 'any' || entry.gender == genderSearchTerm) &&
+            (tagSearchTerms.length === 0 || compareTags(tagSearchTerms, entry.tags))) entry.definitionElement.classList.remove('hide-item');
+        else entry.definitionElement.classList.add('hide-item');
+
+    });
+}
+
+function getOriginSearch() {
+    return document.getElementById('origin-search').value;
+}
+
+function getForeignSearch() {
+    return document.getElementById('foreign-search').value;
+}
+
+function getGenderSearch() {
+    return document.getElementById('gender-select').value;
+}
+
+function getTagSearches() {
+    return getCheckedBoxValuesFrom(document.getElementById('tag-search'));
+}
+
+function compareTags(tagsToSearch, tagsList) {
+    var strict = document.querySelector('.strict-search-check').checked;
+    if (strict) return tagsToSearch.every(element => tagsList.includes(element));
+    else return tagsToSearch.some(element => tagsList.includes(element));
+}
+
+// General functions
+function arrayContainsWordContainingSubstring(array, substring) {
+    result = array.some((element) => element.includes(substring));
+    return result;
 }

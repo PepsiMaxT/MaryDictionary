@@ -25,3 +25,8 @@
 .add-new-tag {
     width: 100%;
 }
+
+.hide-item {
+    visibility: hidden;
+    display: none;
+}
