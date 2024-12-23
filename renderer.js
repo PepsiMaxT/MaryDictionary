@@ -65,11 +65,12 @@ function functionaliseAddNewButton() {
 
             // Add it to the dictionary and save
             // If it fails, add the functionalities back
+            dictionary.unshift(newDefinition);
             if (saveEdit(newDefinition)) {
-                dictionary.unshift(newDefinition);
                 addNewButton.addEventListener('click', addNewDefinition); // Enable new additions
             } else {
                 // Add the functionalities back
+                dictionary.splice(0, 1);
                 getEditOrSaveButtonFrom(newDefinition.definitionElement).addEventListener('click', overrideSave);
                 getDeleteOrCancelButtonFrom(newDefinition.definitionElement).addEventListener('click', overrideCancel);
             }
@@ -226,7 +227,7 @@ function createDefinitionObjectFrom(definition) {
         element.addEventListener('change', reloadDictionary);
         element.addEventListener('change', () => { 
             newDefinition.tags = getCheckedBoxValuesFrom(tagDropList);
-            console.log(definition.tags);
+            dictionaryFunctions.update(getSerializableDictionary(dictionary));
         });
     });
 
@@ -350,6 +351,9 @@ function createGenderButton() {
         genderOption.innerText = option;
         genderSelector.appendChild(genderOption);
     });
+
+    genderSelector.addEventListener('change', reloadDictionary);
+    genderSelector.addEventListener('change', () => { dictionaryFunctions.update(getSerializableDictionary(dictionary)); });
 
     return genderSelector;
 }
@@ -478,6 +482,7 @@ function saveEdit(definitionEntry) {
 
     isARowBeingEdited = false;
     rowBeingEdited = null;
+    dictionaryFunctions.update(getSerializableDictionary(dictionary));
     reloadDictionary();
 
     return true;
@@ -596,4 +601,13 @@ async function createPopUp(divToFreeze, message, buttonList) {
 
     divToFreeze.parentNode.appendChild(popUp);
     divToFreeze.style.pointerEvents = 'none';
+}
+
+function getSerializableDictionary(dictionary) {
+    return dictionary.map(entry => ({
+        origin: entry.origin,
+        foreign: entry.foreign,
+        gender: entry.gender,
+        tags: entry.tags
+    }));
 }

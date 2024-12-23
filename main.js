@@ -22,6 +22,7 @@ app.whenReady().then(async () => {
   await readInTags();
   ipcMain.handle('getDictionary', () => {return dictionary;});
   ipcMain.handle('getTags', () => {return tags;});
+  ipcMain.handle('updateDictionary', (event, newDictionary) => {updateDictionary(newDictionary) }); 
 
   createWindow();
 
@@ -33,6 +34,8 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
+  writeDictionary();
+
   if (process.platform !== 'darwin') {
     app.quit();
   }
@@ -56,4 +59,17 @@ async function readInDictionary() {
 async function readInTags() {
   const data = await fs.readFile(path.join(__dirname, "tags.txt"), 'utf8');
   tags = data.split('\n');
+}
+
+function updateDictionary(newDictionary) {
+  dictionary = newDictionary;
+}
+
+async function writeDictionary() {
+  let data = "";
+  dictionary.forEach((entry) => {
+    data += entry.origin.join(',') + '|' + entry.foreign.join(',') + '|' + entry.gender + '|' + entry.tags.join(',') + '\n';
+  });
+  data = data.slice(0, -1);
+  await fs.writeFile(path.join(__dirname, "dictionary.txt"), data);
 }
