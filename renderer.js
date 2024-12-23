@@ -64,9 +64,15 @@ function functionaliseAddNewButton() {
             getDeleteOrCancelButtonFrom(newDefinition.definitionElement).removeEventListener('click', overrideCancel);
 
             // Add it to the dictionary and save
-            saveEdit(newDefinition);
-            dictionary.unshift(newDefinition);
-            addNewButton.addEventListener('click', addNewDefinition); // Enable new additions
+            // If it fails, add the functionalities back
+            if (saveEdit(newDefinition)) {
+                dictionary.unshift(newDefinition);
+                addNewButton.addEventListener('click', addNewDefinition); // Enable new additions
+            } else {
+                // Add the functionalities back
+                getEditOrSaveButtonFrom(newDefinition.definitionElement).addEventListener('click', overrideSave);
+                getDeleteOrCancelButtonFrom(newDefinition.definitionElement).addEventListener('click', overrideCancel);
+            }
         }
         getEditOrSaveButtonFrom(newDefinition.definitionElement).addEventListener('click', overrideSave);
 
@@ -441,6 +447,11 @@ function saveEdit(definitionEntry) {
     var newForeignWords = Array.from(definitionEntry.definitionElement.getElementsByClassName('word-list-container')[1].getElementsByTagName('input')).map((element) => element.value);
     newForeignWords = newForeignWords.slice(0, -1); // Remove the last element as it is always empty
 
+    if (!newOriginWords.length > 0 || !newForeignWords.length > 0) {
+        createPopUp(document.getElementById('overarching-container'), 'Both the origin and foreign word lists must have at least one word', [{text: 'OK'}]);
+        return false;
+    }
+
     // Create new word lists
     const newOriginDiv = createWordList(newOriginWords);
     const newForeignDiv = createWordList(newForeignWords);
@@ -468,6 +479,8 @@ function saveEdit(definitionEntry) {
     isARowBeingEdited = false;
     rowBeingEdited = null;
     reloadDictionary();
+
+    return true;
 }
 
 function cancelEdit(definitionEntry) {
@@ -553,4 +566,34 @@ function compareTags(tagsToSearch, tagsList) {
 function arrayContainsWordContainingSubstring(array, substring) {
     result = array.some((element) => element.includes(substring));
     return result;
+}
+
+async function createPopUp(divToFreeze, message, buttonList) {
+    const popUp = document.createElement('div');
+    popUp.classList.add('popup');
+    
+    const closePopUp = (event) => {
+        popUp.parentNode.removeChild(popUp);
+        divToFreeze.style.pointerEvents = 'auto';
+    }
+
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('popup-message');
+    messageDiv.innerText = message;
+    popUp.appendChild(messageDiv);
+
+    const buttonDiv = document.createElement('div');
+    buttonList.forEach((buttonElement) => {
+        const button = document.createElement('button');
+        button.classList.add('popup-button')
+        button.innerText = buttonElement.text;
+        if (buttonElement.action != null) button.addEventListener('click', buttonElement.action);
+        button.addEventListener('click', closePopUp);
+
+        buttonDiv.appendChild(button);
+    });
+    popUp.appendChild(buttonDiv);
+
+    divToFreeze.parentNode.appendChild(popUp);
+    divToFreeze.style.pointerEvents = 'none';
 }
