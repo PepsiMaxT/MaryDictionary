@@ -8,6 +8,12 @@ document.addEventListener('DOMContentLoaded', async (event) => {
     const selectTagsDropdown = createUncheckedDropList(tags);
     selectTagsDropdown.id = 'tag-search';
     getDropdownBoxButtonFrom(selectTagsDropdown).innerText = 'Select tags';
+
+    const addNewbtn = document.createElement('button');
+    addNewbtn.classList.add('add-new-tag');
+    addNewbtn.innerText = 'Add new';
+    dropList = getDropDownListFrom(selectTagsDropdown);
+    dropList.appendChild(addNewbtn);
     document.getElementById('placeholder-dropdown').replaceWith(selectTagsDropdown);
 
     const dictionaryContainer = document.getElementById('definition-table');
@@ -52,11 +58,12 @@ function functionaliseDropdown(dropdown) {
     const list = getDropDownListFrom(dropdown);
 
     btn.addEventListener('click', (event) => {
-        event.stopPropagation(); // Stop the click event being registered as the "unfocus" by document
+        // Stop the click event being registered as the "unfocus" by document
 
         // Add or remove dropdown content show
         if (list.classList.contains('dropdown-content-show')) {
             list.classList.remove('dropdown-content-show');
+            event.stopPropagation();
             document.removeEventListener('click', closeDropdown)
         } else {
             list.classList.add('dropdown-content-show');
@@ -120,17 +127,47 @@ function createDictionaryFrom(dictionary) {
     
     dictionary.forEach((definition) => 
     {
-        fleshedDictionary.push( { origin: definition.origin, foreign: definition.foreign, gender: definition.gender, tags: definition.tags, definitionElement: createDefinitionElementFrom(definition) } );
+        var newDefinition = createDefinitionObjectFrom(definition);
+        fleshedDictionary.push( newDefinition );
+        getEditOrSaveButtonFrom(newDefinition.definitionElement).addEventListener('click', newDefinition.edit);
+        getDeleteOrCancelButtonFrom(newDefinition.definitionElement).addEventListener('click', newDefinition.delete);
     });
 
     return fleshedDictionary;
 }
 
+function createDefinitionObjectFrom(definition) { 
+    var newDefinition = { origin: definition.origin, foreign: definition.foreign, gender: definition.gender, tags: definition.tags, definitionElement: createDefinitionElementFrom(definition) }
+    newDefinition.edit = () => { switchToEdit(newDefinition) };
+    newDefinition.save = () => { saveEdit(newDefinition) };
+    newDefinition.cancel = () => { cancelEdit(newDefinition) };
+    newDefinition.delete = () => {
+        // Delete the definition
+        newDefinition.definitionElement.parentNode.removeChild(newDefinition.definitionElement);
+        dictionary.splice(dictionary.indexOf(newDefinition), 1);
+    }
+
+    const genderSelector = newDefinition.definitionElement.querySelector('.gender-selector');
+    genderSelector.addEventListener('change', () => {
+        newDefinition.gender = genderSelector.value;
+    });
+
+    const tagDropListElements = newDefinition.definitionElement.getElementsByClassName('dropdown-checkbox');
+    Array.from(tagDropListElements).forEach((element) => {
+        element.addEventListener('change', reloadDictionary);
+        element.addEventListener('change', () => { 
+            definition.tags = getCheckedBoxValuesFrom(tagDropList);
+        });
+    });
+
+    return newDefinition;
+}
+
 function createDefinitionElementFrom(definition) {
-    originWords = definition.origin;
-    foreignWords = definition.foreign;
-    gender = definition.gender;
-    definitionTags = definition.tags;
+    const originWords = definition.origin;
+    const foreignWords = definition.foreign;
+    const gender = definition.gender;
+    const definitionTags = definition.tags;
     /*
     <div class="definition-container">
         <div class="metadata-container">
@@ -148,36 +185,37 @@ function createDefinitionElementFrom(definition) {
     </div>  
     */
 
-    definitionDiv = document.createElement('div');
+    const definitionDiv = document.createElement('div');
     definitionDiv.classList.add('definition-container');
 
-    metaDataDiv = document.createElement('div');
+    const metaDataDiv = document.createElement('div');
     metaDataDiv.classList.add('metadata-container');
-    genderSelector = createGenderButton();
+    const genderSelector = createGenderButton();
     genderSelector.value = gender;
     metaDataDiv.appendChild(genderSelector);
 
-    tagDropList = createCheckedDropList(tags, definitionTags);
+    const tagDropList = createCheckedDropList(tags, definitionTags);
+
     metaDataDiv.appendChild(tagDropList); 
 
     // Add the buttons
 
     // Actual word definitions
-    originWordsDiv = createWordList(originWords);
+    const originWordsDiv = createWordList(originWords);
 
-    foreignWordsDiv = createWordList(foreignWords);
+    const foreignWordsDiv = createWordList(foreignWords);
     
-    interactionDiv = document.createElement('div');
+    const interactionDiv = document.createElement('div');
     interactionDiv.classList.add('interaction-elements-container');
-    const saveButton = document.createElement('button');
-    saveButton.innerText = 'Save';
-    saveButton.classList.add('definition-btn');
+    const editButton = document.createElement('button');
+    editButton.innerText = 'Edit';
+    editButton.classList.add('definition-btn');
 
     const deleteButton = document.createElement('button');
     deleteButton.innerText = 'Delete';
     deleteButton.classList.add('definition-btn');
 
-    interactionDiv.appendChild(saveButton);
+    interactionDiv.appendChild(editButton);
     interactionDiv.appendChild(deleteButton);
 
     // Add the buttons
@@ -198,6 +236,7 @@ function createWordList(words)
     words.forEach((word) => {
         wordElement = document.createElement('div');
         wordElement.innerText = word;
+        wordElement.classList.add('word-element');
         listContainer.appendChild(wordElement);
     });
 
@@ -220,11 +259,6 @@ function createCheckedDropList(elements, checkedElements) {
     dropList = document.createElement('div');
     dropList.classList.add('dropdown-content');
     dropdown.appendChild(dropList);
-
-    addNewbtn = document.createElement('button');
-    addNewbtn.classList.add('add-new-tag');
-    addNewbtn.innerText = 'Add new';
-    dropList.appendChild(addNewbtn);
 
     elements.forEach((element) => {
         addOptionToDropdown(dropdown, element, element, checkedElements.includes(element));
@@ -250,19 +284,179 @@ function createGenderButton() {
     return genderSelector;
 }
 
+// Editing dictionaries
+
+var isARowBeingEdited = false;
+var rowBeingEdited = null;
+
+function switchToEdit(definitionEntry) {
+    if (isARowBeingEdited) {
+        getDeleteOrCancelButtonFrom(rowBeingEdited).click();
+    }
+
+    const originWords = definitionEntry.origin;
+    const foreignWords = definitionEntry.foreign;
+    const gender = definitionEntry.gender;
+    const tags = definitionEntry.tags;
+
+    const definitionElement = definitionEntry.definitionElement;
+    isARowBeingEdited = true;
+    rowBeingEdited = definitionElement;
+
+    // Replace all the definition divs with input boxes
+    const wordListContainers = definitionElement.getElementsByClassName('word-list-container');
+    Array.from(wordListContainers).forEach((container) => {
+        convertListToInputs(container);
+    });
+
+    const editButton = getEditOrSaveButtonFrom(definitionElement);
+    editButton.innerText = 'Save';
+    editButton.removeEventListener('click', definitionEntry.edit);
+    editButton.addEventListener('click', definitionEntry.save);
+
+    const deleteButton = getDeleteOrCancelButtonFrom(definitionElement);
+    deleteButton.innerText = 'Cancel';
+    deleteButton.removeEventListener('click', definitionEntry.delete);
+    deleteButton.addEventListener('click', definitionEntry.cancel);
+}
+
+function convertListToInputs(container) {
+    // Make an input box remove itself if empty
+    const checkForEmptyWord = (event) => {
+        if (event.target.value === '') {
+            event.target.parentNode.removeChild(event.target);
+        }
+    }
+
+    const restricInput = (event) => {
+        const forbiddenCharacters = ['|', ','];
+        if (forbiddenCharacters.includes(event.key)) 
+        {
+            event.preventDefault();
+        }
+    };
+
+    // Replace all the word elements with input elements
+    const wordElements = container.getElementsByClassName('word-element');
+    Array.from(wordElements).forEach((element) => {
+        const input = document.createElement('input');
+        input.value = element.innerText;
+        input.classList.add('word-element');
+        input.addEventListener('keydown', restricInput);
+        input.addEventListener('blur', checkForEmptyWord);
+        container.replaceChild(input, element);
+    });
+
+    const newWordInput = document.createElement('input');
+    newWordInput.type = 'text';
+    newWordInput.classList.add('word-element');
+
+    const onNonEmptyInput = (event) => {
+        if (/^[a-zA-Z0-9\s!"#$%&'()*+\-./:;<=>?@[\\\]^_`{}~]$/.test(event.key)) {
+            event.target.removeEventListener('keydown', onNonEmptyInput);
+            event.target.addEventListener('blur', checkForEmptyWord);
+            const replacementNewInput = document.createElement('input');
+            replacementNewInput.type = 'text';
+            replacementNewInput.classList.add('word-element');
+            replacementNewInput.addEventListener('keydown', restricInput);
+            replacementNewInput.addEventListener('keydown', onNonEmptyInput);
+            container.appendChild(replacementNewInput);
+        }
+    };
+
+    newWordInput.addEventListener('keydown', restricInput);
+    newWordInput.addEventListener('keydown', onNonEmptyInput);
+    container.appendChild(newWordInput);
+}
+
+function saveEdit(definitionEntry) {
+    // Get the new words
+    var newOriginWords = Array.from(definitionEntry.definitionElement.getElementsByClassName('word-list-container')[0].getElementsByTagName('input')).map((element) => element.value);
+    newOriginWords = newOriginWords.slice(0, -1); // Remove the last element as it is always empty
+    var newForeignWords = Array.from(definitionEntry.definitionElement.getElementsByClassName('word-list-container')[1].getElementsByTagName('input')).map((element) => element.value);
+    newForeignWords = newForeignWords.slice(0, -1); // Remove the last element as it is always empty
+
+    // Create new word lists
+    const newOriginDiv = createWordList(newOriginWords);
+    const newForeignDiv = createWordList(newForeignWords);
+
+    // Replace the input boxes with the new word elements
+    const allWordDivs = definitionEntry.definitionElement.getElementsByClassName('word-list-container');
+    allWordDivs[0].replaceWith(newOriginDiv);
+    allWordDivs[1].replaceWith(newForeignDiv);
+
+    // Swap the buttons
+    const saveButton = getEditOrSaveButtonFrom(definitionEntry.definitionElement);
+    saveButton.innerText = 'Edit';
+    saveButton.removeEventListener('click', definitionEntry.save);
+    saveButton.addEventListener('click', definitionEntry.edit);
+
+    const cancelButton = getDeleteOrCancelButtonFrom(definitionEntry.definitionElement);
+    cancelButton.innerText = 'Delete';
+    cancelButton.removeEventListener('click', definitionEntry.cancel);
+    cancelButton.addEventListener('click', definitionEntry.delete);
+
+    // Update the dictionary
+    definitionEntry.origin = newOriginWords;
+    definitionEntry.foreign = newForeignWords;
+
+    isARowBeingEdited = false;
+    rowBeingEdited = null;
+    reloadDictionary();
+}
+
+function cancelEdit(definitionEntry) {
+    // Get the original words
+    const oldOriginDiv = createWordList(definitionEntry.origin);
+    const oldForeignDiv = createWordList(definitionEntry.foreign);
+
+    // Replace the input boxes with the old word elements
+    const allWordDivs = definitionEntry.definitionElement.getElementsByClassName('word-list-container');
+    allWordDivs[0].replaceWith(oldOriginDiv);
+    allWordDivs[1].replaceWith(oldForeignDiv);
+
+    // Swap the buttons
+    const saveButton = getEditOrSaveButtonFrom(definitionEntry.definitionElement);
+    saveButton.innerText = 'Edit';
+    saveButton.removeEventListener('click', definitionEntry.save);
+    saveButton.addEventListener('click', definitionEntry.edit);
+
+    const cancelButton = getDeleteOrCancelButtonFrom(definitionEntry.definitionElement);
+    cancelButton.innerText = 'Delete';
+    cancelButton.removeEventListener('click', definitionEntry.cancel);
+    cancelButton.addEventListener('click', definitionEntry.delete);
+
+    isARowBeingEdited = false;
+    rowBeingEdited = null;
+    reloadDictionary();
+}
+
+// Accessing definitionElement elements
+
+function getEditOrSaveButtonFrom(definitionElement) {
+    return definitionElement.getElementsByClassName('definition-btn')[0];
+};
+
+function getDeleteOrCancelButtonFrom(definitionElement) {
+    return definitionElement.getElementsByClassName('definition-btn')[1];
+}
+
 // Searching through 
 
 function reloadDictionary() {
-    originSearchTerm = getOriginSearch();
-    foreignSearchTerm = getForeignSearch();
-    genderSearchTerm = getGenderSearch();
-    tagSearchTerms = getTagSearches();
+    const originSearchTerm = getOriginSearch();
+    const foreignSearchTerm = getForeignSearch();
+    const genderSearchTerm = getGenderSearch();
+    const tagSearchTerms = getTagSearches();
 
     dictionary.forEach((entry) => {
         if ((originSearchTerm === '' || arrayContainsWordContainingSubstring(entry.origin, originSearchTerm)) && 
-            (foreignSearchTerm === '' || arrayContainsWordContainingSubstring(entry.foreign, foreignSearchTerm)) && 
-            (genderSearchTerm === 'any' || entry.gender == genderSearchTerm) &&
-            (tagSearchTerms.length === 0 || compareTags(tagSearchTerms, entry.tags))) entry.definitionElement.classList.remove('hide-item');
+                 (foreignSearchTerm === '' || arrayContainsWordContainingSubstring(entry.foreign, foreignSearchTerm)) && 
+                 (genderSearchTerm === 'any' || entry.gender == genderSearchTerm) &&
+                 (tagSearchTerms.length === 0 || compareTags(tagSearchTerms, entry.tags))) entry.definitionElement.classList.remove('hide-item');
+        else if (entry.definitionElement === rowBeingEdited) {
+            entry.definitionElement.classList.remove('hide-item');
+        }
         else entry.definitionElement.classList.add('hide-item');
 
     });
