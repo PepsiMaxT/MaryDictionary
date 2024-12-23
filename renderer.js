@@ -118,6 +118,16 @@ function functionaliseDropdown(dropdown) {
     const btn = getDropdownBoxButtonFrom(dropdown);
     const list = getDropDownListFrom(dropdown);
 
+    // Declare the dropdown close detection
+    const closeDropdown = (event) => {
+        if (!dropdown.contains(event.target)) {
+            list.classList.remove('dropdown-content-show');
+
+            // Remove the event from the document
+            document.removeEventListener('click', closeDropdown);
+        }
+    }
+
     btn.addEventListener('click', (event) => {
         // Stop the click event being registered as the "unfocus" by document
 
@@ -130,15 +140,6 @@ function functionaliseDropdown(dropdown) {
             list.classList.add('dropdown-content-show');
         }
 
-        // Declare the dropdown close detection
-        const closeDropdown = (event) => {
-            if (!dropdown.contains(event.target)) {
-                list.classList.remove('dropdown-content-show');
-
-                // Remove the event from the document
-                document.removeEventListener('click', closeDropdown);
-            }
-        }
         document.addEventListener('click', closeDropdown);
     });
 }
@@ -213,11 +214,13 @@ function createDefinitionObjectFrom(definition) {
         newDefinition.gender = genderSelector.value;
     });
 
-    const tagDropListElements = newDefinition.definitionElement.getElementsByClassName('dropdown-checkbox');
+    const tagDropList = newDefinition.definitionElement.querySelector('.dropdown');
+    const tagDropListElements = tagDropList.getElementsByClassName('dropdown-checkbox');
     Array.from(tagDropListElements).forEach((element) => {
         element.addEventListener('change', reloadDictionary);
         element.addEventListener('change', () => { 
-            definition.tags = getCheckedBoxValuesFrom(tagDropList);
+            newDefinition.tags = getCheckedBoxValuesFrom(tagDropList);
+            console.log(definition.tags);
         });
     });
 
