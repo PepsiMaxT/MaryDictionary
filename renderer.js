@@ -5,9 +5,13 @@ document.addEventListener('DOMContentLoaded', async (event) => {
     tags = await definitions.getTags();
     dictionary = createDictionaryFrom(await definitions.getDictionary());
 
+    // Create the drop down to search for tags
+
     const selectTagsDropdown = createUncheckedDropList(tags);
     selectTagsDropdown.id = 'tag-search';
     getDropdownBoxButtonFrom(selectTagsDropdown).innerText = 'Select tags';
+
+    // Allow more tags to be created
 
     const addNewbtn = document.createElement('button');
     addNewbtn.classList.add('add-new-tag');
@@ -16,13 +20,70 @@ document.addEventListener('DOMContentLoaded', async (event) => {
     dropList.appendChild(addNewbtn);
     document.getElementById('placeholder-dropdown').replaceWith(selectTagsDropdown);
 
-    const dictionaryContainer = document.getElementById('definition-table');
-    dictionary.forEach((definition) => {
-        dictionaryContainer.appendChild(definition.definitionElement);
-    });
+    insertAllDefinitionsIntoTable();
+
+    functionaliseAddNewButton();
 
     addUpdateFunctionsToSearches();
 });
+
+function insertAllDefinitionsIntoTable() {
+    const dictionaryContainer = document.getElementById('definition-table');
+    dictionary.forEach((definition) => {
+        insertDefinitionIntoTable(definition, dictionaryContainer);
+    });
+}
+
+function insertDefinitionIntoTable(definition, table) {
+    table.appendChild(definition.definitionElement);
+}
+
+function insertDefinitionIntoTableStart(definition, table) {
+    table.insertBefore(definition.definitionElement, table.firstChild);
+}
+
+function functionaliseAddNewButton() {
+    const addNewButton = document.querySelector('.add-new-definition-btn');
+
+    const addNewDefinition = (event) => {
+        // Make sure no new additions can be made
+        addNewButton.removeEventListener('click', addNewDefinition);
+
+        const newDefinition = createDefinitionObjectFrom({ origin: [], foreign: [], gender: 'N/A', tags: [] }); // Create a new definition entry
+        insertDefinitionIntoTableStart(newDefinition, document.getElementById('definition-table')); // Make sure it shows at the top
+        switchToEdit(newDefinition); // Make it an editable entry
+
+        // Remove the normal functionalities
+        getEditOrSaveButtonFrom(newDefinition.definitionElement).removeEventListener('click', newDefinition.save);
+        getDeleteOrCancelButtonFrom(newDefinition.definitionElement).removeEventListener('click', newDefinition.cancel);
+        
+        // Add the new functionalities
+        const overrideSave = (event) => {
+            // Remove the functionalities
+            getEditOrSaveButtonFrom(newDefinition.definitionElement).removeEventListener('click', overrideSave);
+            getDeleteOrCancelButtonFrom(newDefinition.definitionElement).removeEventListener('click', overrideCancel);
+
+            // Add it to the dictionary and save
+            saveEdit(newDefinition);
+            dictionary.unshift(newDefinition);
+            addNewButton.addEventListener('click', addNewDefinition); // Enable new additions
+        }
+        getEditOrSaveButtonFrom(newDefinition.definitionElement).addEventListener('click', overrideSave);
+
+        const overrideCancel = (event) => {
+            newDefinition.definitionElement.parentNode.removeChild(newDefinition.definitionElement); // Remove the element
+            
+            // Free up an editing space
+            isARowBeingEdited = false;
+            rowBeingEdited = null;
+
+            addNewButton.addEventListener('click', addNewDefinition); // Enable new additions
+        }
+        getDeleteOrCancelButtonFrom(newDefinition.definitionElement).addEventListener('click', overrideCancel);
+    }
+
+    addNewButton.addEventListener('click', addNewDefinition );
+}
 
 function addUpdateFunctionsToSearches() {
     const originSearch = document.getElementById('origin-search');
@@ -291,7 +352,8 @@ var rowBeingEdited = null;
 
 function switchToEdit(definitionEntry) {
     if (isARowBeingEdited) {
-        getDeleteOrCancelButtonFrom(rowBeingEdited).click();
+        const cancelButton = getDeleteOrCancelButtonFrom(rowBeingEdited);
+        cancelButton.click();
     }
 
     const originWords = definitionEntry.origin;
