@@ -1,0 +1,18 @@
+{
+    "editor.tokenColorCustomizations": {
+        "comments": "#d113c8",
+    },
+    "workbench.colorCustomizations": {
+        "editor.background": "#0d0e1f", // Background color of the editor
+        "editor.foreground": "#F8F8F2", // Default text color
+        "editorLineNumber.foreground": "#75715E", // Line number color
+        "editorCursor.foreground": "#F8F8F0", // Cursor color
+        "editor.selectionBackground": "#49483E", // Selection background color // Inactive selection background color
+        "editor.lineHighlightBackground": "#3E3D32", // Line highlight background color
+        "editor.findMatchBackground": "#FFE792", // Find match background 
+        "editorBracketMatch.background": "#75715E", // Bracket match background color
+        "editorBracketMatch.border": "#F8F8F0", // Bracket match border color
+        "editorWhitespace.foreground": "#3B3A32", // Whitespace color// Indent guide color
+        "editorRuler.foreground": "#3B3A32" // Ruler color
+    },
+}
