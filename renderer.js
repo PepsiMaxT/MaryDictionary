@@ -214,6 +214,7 @@ function createDefinitionObjectFrom(definition) {
         // Delete the definition
         newDefinition.definitionElement.parentNode.removeChild(newDefinition.definitionElement);
         dictionary.splice(dictionary.indexOf(newDefinition), 1);
+        dictionaryFunctions.update(getSerializableDictionary(dictionary));
     }
 
     const genderSelector = newDefinition.definitionElement.querySelector('.gender-selector');

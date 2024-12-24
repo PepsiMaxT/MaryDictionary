@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
 
@@ -33,12 +33,23 @@ app.whenReady().then(async () => {
   });
 });
 
-app.on('window-all-closed', () => {
-  writeDictionary();
+app.on('window-all-closed', async (event) => {
+  event.preventDefault();
+
+  const result = await dialog.showMessageBox({
+    type: 'question',
+    buttons: ['Yes', 'No'],
+    defaultId: 0,
+    cancelID: 1,
+    title: 'Confirm',
+    message: 'Do you want to save your changes before quitting?'
+  });
+
+  if (result.response === 0) writeDictionary();
 
   if (process.platform !== 'darwin') {
     app.quit();
-  }
+  } else app.exit();
 });
 
 async function readInDictionary() { 
@@ -46,6 +57,7 @@ async function readInDictionary() {
   fileLines = data.split('\n');
 
   fileLines.forEach((line) => {
+    if (line.length === 0) return;
     elements = line.split('|');
 
     originWords = elements[0].split(',');

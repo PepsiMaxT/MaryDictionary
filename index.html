@@ -16,23 +16,25 @@
   <body>
     <div id="overarching-container">
     <div id="main-container"> <!-- This div contains the actual dictionary itself -->
-        <div id="search-bar-container"> <!-- This div contains the search bar-->
-            <select name="gender" id="gender-select">
-                <option value="any">Any</option>
-                <option value="M">Masculine</option>
-                <option value="F">Feminine</option>
-                <option value="N">Neuter</option>
-                <option value="N/A">No gender</option>
-            </select>
-            <div class="dropdown" id="placeholder-dropdown">
-                
-            </div>
-            <label><input type="checkbox" class="strict-search-check">Strict search</label>
-            <input type="text" placeholder="Enter origin term" id="origin-search" class="search-input" value="">
-            <input type="text" placeholder="Enter foreign term" id="foreign-search" class="search-input" value="">
-        </div>
-        <div id="add-word-container">
-            <button class="add-new-definition-btn" id="add-new-btn">Add new</button>
+        <div id="head-container">
+          <div id="search-bar-container"> <!-- This div contains the search bar-->
+              <select name="gender" id="gender-select">
+                  <option value="any">Any</option>
+                  <option value="M">Masculine</option>
+                  <option value="F">Feminine</option>
+                  <option value="N">Neuter</option>
+                  <option value="N/A">No gender</option>
+              </select>
+              <div class="dropdown" id="placeholder-dropdown">
+                  
+              </div>
+              <label><input type="checkbox" class="strict-search-check">Strict search</label>
+              <input type="text" placeholder="Enter origin term" id="origin-search" class="search-input" value="">
+              <input type="text" placeholder="Enter foreign term" id="foreign-search" class="search-input" value="">
+          </div>
+          <div id="add-word-container">
+              <button class="add-new-definition-btn" id="add-new-btn">Add new</button>
+          </div>
         </div>
         <div id="definition-table">
             
